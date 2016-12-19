@@ -1,0 +1,23 @@
+[
+        {
+            "name":       "Tiger Nixon",
+            "position":   "System Architect",
+            "salary":     "$3,120",
+            "start_date": "2011/04/25",
+            "office":     "Edinburgh",
+            "extn": {
+                "data": [
+                    { "url" : "http://static.visual-computing.com/habit/n00006484/n00006484_25.jpg" },
+                    { "url" : "http://static.visual-computing.com/habit/n00006484/n00006484_25.jpg" }
+                ]
+            }      
+        },
+        {
+            "name": "Garrett Winters",
+            "position": "Director",
+            "salary": "5300",
+            "start_date": "2011/07/25",
+            "office": "Edinburgh",
+            "extn": "8422"
+        }
+]
