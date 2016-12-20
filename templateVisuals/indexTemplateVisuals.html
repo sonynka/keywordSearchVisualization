@@ -1,0 +1,96 @@
+<html>
+<head>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="dataTemplateVisuals.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.lazyload/1.9.1/jquery.lazyload.js"></script>
+<script type="text/javascript">
+/* Custom filtering function which will filter data in column four between two values */
+$.fn.dataTableExt.afnFiltering.push(
+	function( oSettings, aData, iDataIndex ) {
+		var iMin = document.getElementById('min').value * 1;
+		var iMax = document.getElementById('max').value * 1;
+		var iSim = aData[3] == "-" ? 0 : aData[3]*1;
+		if ( iMin == "" && iMax == "" )
+		{
+			return true;
+		}
+		else if ( iMin == "" && iSim < iMax )
+		{
+			return true;
+		}
+		else if ( iMin < iSim && "" == iMax )
+		{
+			return true;
+		}
+		else if ( iMin < iSim && iSim < iMax )
+		{
+			return true;
+		}
+		return false;
+	}
+);
+
+$(document).ready(function() {
+    var table = $('#keywordsTable').dataTable( {
+        data: data,
+        drawCallback: function() {
+            $("img.lazy").lazyload();
+        },
+        "lengthMenu": [[10, 50, 100, 1000], [10, 50, 100, 1000]],
+        columns: [
+            { "data": "synsetId" , "title": "Synset ID", "width" : "10%" },
+            { "data": "numberOfImages", "title": "# of Images", "width" : "10%" },
+            { "data": "keywords[, ]", "title": "Keywords" , "width" : "20%"},
+            { "data": "averageSimilarity", "title": "Average Similarity", "width": "10%", 
+                "render": function(data,  type, row) {
+                    return Number(data).toFixed(4);
+                }
+            },
+            { "data": "templates", "title": "Templates", "orderable" : false, 
+                "render": function(data, type, row) {        
+                    var templates = $.map(data, function(template, i) {
+                        var category;
+                        var extraCaption = "";
+                        if(template.rightCategory == true){category = "rightCategory";}
+                        else {category = "wrongCategory"; extraCaption = "</br>[" + template.imgSynsetId + "]</br>" + template.imgKeywords[0];};
+                        return "<td><figure><img class='lazy' id='" + category + "' data-original='" + template.imagePath +"'/><figcaption>" + template.imageSimilarity + extraCaption + "</figcaption></figure></td>";
+                    });
+
+                return "<table id='imgTable'><tr>" + templates.join(' ') + "</tr></table>"; }
+            }
+        ]
+    } );
+
+    $('#min').keyup( function() { table.fnDraw(); } );
+	$('#max').keyup( function() { table.fnDraw(); } );
+} );
+
+$(function() {
+    $("img.lazy").lazyload();
+});
+</script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/scroller/1.4.2/css/scroller.dataTables.min.css" />
+<style media="screen" type="text/css">
+    table#keywordsTable, table#keywordsTable th, table#keywordsTable td {border-collapse: collapse; border: 1px solid black; text-align:center;}
+    table#imgTable, table#imgTable th, table#imgTable td {border: none; text-align:center;}
+    img#wrongCategory {border: 3px solid #ff0000;}
+    figure { float: left; margin: 0; text-align: center; padding: 10px; display: inline; white-space: nowrap;}
+    img {width: 100px;}
+</style>
+</head>
+<body>
+	<table id="filtersTable" border="0" cellspacing="5" cellpadding="5">
+				<tr>
+					<td>Minimum average similarity:</td>
+					<td><input type="text" id="min" name="min"></td>
+				</tr>
+				<tr>
+					<td>Maximum average similarity:</td>
+					<td><input type="text" id="max" name="max"></td>
+				</tr>
+	</table>
+   	<table id="keywordsTable" class="display" width="100%"></table>
+</body>
+</html>
