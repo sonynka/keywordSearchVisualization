@@ -1,5 +1,6 @@
 <html>
 <head>
+<title>Templates Visuals</title>
 <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="dataTemplateVisuals.js"></script>
@@ -49,7 +50,7 @@ $(document).ready(function() {
             },
             { "data": "templates", "title": "Templates", "orderable" : false, 
                 "render": function(data, type, row) {        
-                    var templates = $.map(data, function(template, i) {
+                    var templates = $.map(data, function(template) {
                         var category;
                         var extraCaption = "";
                         if(template.rightCategory == true){category = "rightCategory";}
@@ -69,28 +70,105 @@ $(document).ready(function() {
 $(function() {
     $("img.lazy").lazyload();
 });
+
+function filterWeakSimilarity(checkbox){
+     var table = $('#keywordsTable').dataTable().api();
+
+    if(checkbox.checked){
+        var filteredData = $.map(data, function(keyword){ 
+            if(keyword.averageSimilarity < 0.7){
+                return keyword;
+            }
+        });
+        table.clear(); 
+        table.rows.add(filteredData);
+        table.draw();
+    } else {
+        table.clear(); 
+        table.rows.add(data);
+        table.draw();
+    }
+}
+
+function filterSameImages(checkbox){
+     var table = $('#keywordsTable').dataTable().api();
+
+    if(checkbox.checked){
+        var filteredData = $.map(data, function(keyword){ 
+            var templates = keyword.templates;
+            var filteredTemplates = JSON.parse(JSON.stringify(templates));
+            var foundSameImages = false;
+            for(i = 0; i < templates.length; i++){
+                for(j = i+1; j < templates.length; j++){
+                    if(templates[i].imagePath == templates[j].imagePath){
+                        foundSameImages = true;
+                        console.log("found same images " + keyword.synsetId);
+                        if(templates[i].imageSimilarity < templates[j].imageSimilarity){
+                            filteredTemplates.splice(i, 1);
+                        } else {
+                            filteredTemplates.splice(j, 1);
+                        }
+                    }
+                }
+            }
+
+            if(foundSameImages){
+                keyword.templates = filteredTemplates;
+                return keyword;
+            }
+        });
+        table.clear(); 
+        table.rows.add(filteredData);
+        table.draw();
+    } else {
+        table.clear(); 
+        table.rows.add(data);
+        table.draw();
+    }
+}
 </script>
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css" />
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/scroller/1.4.2/css/scroller.dataTables.min.css" />
 <style media="screen" type="text/css">
-    table#keywordsTable, table#keywordsTable th, table#keywordsTable td {border-collapse: collapse; border: 1px solid black; text-align:center;}
-    table#imgTable, table#imgTable th, table#imgTable td {border: none; text-align:center;}
+    * {font-family: "Arial", sans-serif; font-size: 14px;}
+    table#keywordsTable, table#keywordsTable th, table#keywordsTable td {border-collapse: collapse; border: 1px solid black; text-align: center;}
+    table#imgTable, table#imgTable th, table#imgTable td {border: none; text-align: center;}
     img#wrongCategory {border: 3px solid #ff0000;}
     figure { float: left; margin: 0; text-align: center; padding: 10px; display: inline; white-space: nowrap;}
     img {width: 100px;}
 </style>
 </head>
 <body>
-	<table id="filtersTable" border="0" cellspacing="5" cellpadding="5">
-				<tr>
-					<td>Minimum average similarity:</td>
-					<td><input type="text" id="min" name="min"></td>
-				</tr>
-				<tr>
-					<td>Maximum average similarity:</td>
-					<td><input type="text" id="max" name="max"></td>
-				</tr>
-	</table>
+    <table>
+        <tr>
+            <td>
+                <table id="filtersTableView" border="0" cellspacing="5" cellpadding="5">
+                <caption>Filter View</caption>
+            				<tr>
+            					<td>Minimum average similarity:</td>
+            					<td><input type="text" id="min" name="min"></td>
+            				</tr>
+            				<tr>
+            					<td>Maximum average similarity:</td>
+            					<td><input type="text" id="max" name="max"></td>
+            				</tr>
+            	</table>
+            </td>
+            <td>
+                <table id ="filtersTableData" border="0" cellspacing="5" cellpadding="5">
+                <caption>Filter Data</caption>
+                            <tr>
+                                <td>Weak average similarity (< 0.7): </td>
+                                <td><input id="filterWeakSimCheck" type="checkbox" name="filterWeakSimCheck" onclick="filterWeakSimilarity(this)" /></td>
+                            </tr>
+                            <tr>
+                                <td>Same closest image: </td>
+                                <td><input id="filterSameImgCheck" type="checkbox" name="filterSameImgCheck" onclick="filterSameImages(this)" /></td>
+                            </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
    	<table id="keywordsTable" class="display" width="100%"></table>
 </body>
 </html>
