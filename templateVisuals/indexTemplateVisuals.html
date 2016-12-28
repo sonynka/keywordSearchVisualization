@@ -63,9 +63,55 @@ $(document).ready(function() {
         ]
     } );
 
+    $('#keywordsTable tbody').on( 'click', 'tr', function () {
+        $(this).toggleClass('selected');
+    } );
+
+    var exportButton = document.getElementById('exportSelectedButton');
+
+      exportButton.addEventListener('click', function () {
+
+        var link = document.createElement('a');
+        link.setAttribute('download', 'export.json');
+        var selectedData = $.map(table.api().rows('.selected').data(), function (item) {
+            return item;
+        });
+        if(selectedData.length == 0){
+            alert("No rows selected");
+        }
+        else {
+        link.href = makeTextFile(JSON.stringify(selectedData, null, 2));
+        document.body.appendChild(link);
+
+        // wait for the link to be added to the document
+        window.requestAnimationFrame(function () {
+          var event = new MouseEvent('click');
+          link.dispatchEvent(event);
+          document.body.removeChild(link);
+        });
+    }
+
+  }, false);
+
     $('#min').keyup( function() { table.fnDraw(); } );
 	$('#max').keyup( function() { table.fnDraw(); } );
 } );
+
+var textFile = null,
+makeTextFile = function (json) {
+    var data = new Blob([json], {type: 'application/json'});
+
+    // If we are replacing a previously generated file we need to
+    // manually revoke the object URL to avoid memory leaks.
+    if (textFile !== null) {
+      window.URL.revokeObjectURL(textFile);
+    }
+
+    textFile = window.URL.createObjectURL(data);
+
+    // returns a URL you can use as a href
+    return textFile;
+};
 
 $(function() {
     $("img.lazy").lazyload();
@@ -102,7 +148,6 @@ function filterSameImages(checkbox){
                 for(j = i+1; j < templates.length; j++){
                     if(templates[i].imagePath == templates[j].imagePath){
                         foundSameImages = true;
-                        console.log("found same images " + keyword.synsetId);
                         if(templates[i].imageSimilarity < templates[j].imageSimilarity){
                             filteredTemplates.splice(i, 1);
                         } else {
@@ -139,36 +184,27 @@ function filterSameImages(checkbox){
 </style>
 </head>
 <body>
-    <table>
-        <tr>
-            <td>
-                <table id="filtersTableView" border="0" cellspacing="5" cellpadding="5">
-                <caption>Filter View</caption>
-            				<tr>
-            					<td>Minimum average similarity:</td>
-            					<td><input type="text" id="min" name="min"></td>
-            				</tr>
-            				<tr>
-            					<td>Maximum average similarity:</td>
-            					<td><input type="text" id="max" name="max"></td>
-            				</tr>
-            	</table>
-            </td>
-            <td>
-                <table id ="filtersTableData" border="0" cellspacing="5" cellpadding="5">
-                <caption>Filter Data</caption>
-                            <tr>
-                                <td>Weak average similarity (< 0.7): </td>
-                                <td><input id="filterWeakSimCheck" type="checkbox" name="filterWeakSimCheck" onclick="filterWeakSimilarity(this)" /></td>
-                            </tr>
-                            <tr>
-                                <td>Same closest image: </td>
-                                <td><input id="filterSameImgCheck" type="checkbox" name="filterSameImgCheck" onclick="filterSameImages(this)" /></td>
-                            </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+    <button id="exportSelectedButton">Export Selected Rows</button>
+    <button id="deselectAll">Deselect All Rows</button>
+        <table id="filtersTableView" border="0" cellspacing="5" cellpadding="5">
+        <caption>Filter View</caption>
+    				<tr>
+    					<td>Minimum average similarity:</td>
+    					<td><input type="text" id="min" name="min"></td>
+    				</tr>
+    				<tr>
+    					<td>Maximum average similarity:</td>
+    					<td><input type="text" id="max" name="max"></td>
+    				</tr>
+                    <tr>
+                        <td>Weak average similarity (< 0.7): </td>
+                        <td><input id="filterWeakSimCheck" type="checkbox" name="filterWeakSimCheck" onclick="filterWeakSimilarity(this)" /></td>
+                    </tr>
+                    <tr>
+                        <td>Same closest image: </td>
+                        <td><input id="filterSameImgCheck" type="checkbox" name="filterSameImgCheck" onclick="filterSameImages(this)" /></td>
+                    </tr>
+        </table>
    	<table id="keywordsTable" class="display" width="100%"></table>
 </body>
 </html>
